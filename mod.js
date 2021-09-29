@@ -19,7 +19,7 @@ const bgColor = "#001337";
 const playerImgPath = "resources/player.jpg";
 const missileImgPath = "";
 
-var playerPos = [];
+var missileList = [];
 
 // odstranim najprv staru tabulku
 var deleteOldUI = function(){
@@ -68,27 +68,26 @@ setUpCanvas();
 
 class Player{
     
-    constructor(cnvCtx, width, height, size, img){
+    constructor(cnvCtx, width, height, size, img, missileImg){
         this.cnvCtx = cnvCtx;
         this.cnWidth = width;
+        this.cnHeight = height;
         this.playerSize = size;
         this.playerPosX = (width - size) / 2 + (size / 2);
         this.playerPosY = (height - size);
+        this.missileImg = missileImg;
         this.skin = img;
     };
 
-    render = function(){
-        console.log(this.playerPosX, this.playerPosY);
+    render = function() {
         this.playerImg = this.cnvCtx.drawImage(this.skin, this.playerPosX, this.playerPosY);
-        
     };
 
-    moveRight = function(){
+    moveRight = function() {
         if (this.playerPosX < this.cnWidth - this.playerSize) {
             // zamaluje predchadzajucu poziciu
             this.cnvCtx.fillRect(this.playerPosX, this.playerPosY, this.playerSize, this.playerSize);
             this.playerPosX += this.playerSize;
-            console.log(this.playerPosX);
         }
     };
 
@@ -96,17 +95,44 @@ class Player{
         if (this.playerPosX > 0) {
             this.cnvCtx.fillRect(this.playerPosX, this.playerPosY, this.playerSize, this.playerSize);
             this.playerPosX -= this.playerSize;
-            console.log(this.playerPosX);
         }
+    };
+
+    shoot = function(){
+        return new Missile(this.cnvCtx, this.cnHeight, this.playerSize, this.missileImg, this.playerPosX, this.playerPosY);
     };
 };
 
+
 class Missile{
-    constructor(cnvCtx, height, size, img){
+    constructor(cnvCtx, height, size, img, posX, posY){
         this.cnvCtx = cnvCtx;
         this.cnHeight = height;
-        this.missileSize = size;
+        this.size = size;
         this.skin = img;
+        this.posX = posX;
+        this.posY = posY - this.size;
+        this.render(this.size);
+    };
+
+    render = function() {
+        console.log(this.posX, this.posY);
+        this.cnvCtx.drawImage(this.skin, this.posX, this.posY);
+    };
+
+    move = function() {
+        if (this.posY > 0) {
+            this.destroy();
+            this.posY -= this.size;
+            this.render(0);
+        }
+        else if (this.posY <= 0) {
+            this.destroy();
+        }
+    };
+
+    destroy = function() {
+        this.cnvCtx.fillRect(this.posX, this.posY, this.size, this.size);
     };
 };
 
@@ -122,12 +148,19 @@ function playerInput(e){
     }
     // shoot
     else if (e.keyCode == "74") {
-        
+        // spawn missile
+        missileList.push(player.shoot());
     }
 };
 
+function moveMissiles() {
+    missileList.forEach(function(e) {
+        e.move();
+    });
+};
+
 var running = false;
-let player = new Player(canvasCtx, cnWidth, cnHeight, entityWidth, playerImg)
+let player = new Player(canvasCtx, cnWidth, cnHeight, entityWidth, playerImg, missileImg);
 // main game loop
 var mainGameLoop = function(){
     running = true;
@@ -137,6 +170,9 @@ var mainGameLoop = function(){
     // loop ktory bude vykreslovat vsetko
     var drawLoop = setInterval(function(){
         player.render();
+        if (missileList.length !== 0){
+            moveMissiles();
+        }
     }, gameSpeed);
 
     // loop ktory bude detekovat zasahy
