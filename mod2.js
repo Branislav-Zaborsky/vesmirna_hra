@@ -1,5 +1,3 @@
-//import "/index.js"
-
 // parameters
 const cnWidth = 480;
 const cnHeight = 528;
@@ -64,6 +62,7 @@ alienImg.src = alienImgPath;
 
 //SFX
 const explosionSFX = new Audio("resources/explosion.mp3");
+const bgMusic = new Audio("resources/bg_music.wav")
 
 // Buttons
 buttonElem.id = bttnId;
@@ -78,7 +77,7 @@ resetBttn.style.margin = "30px";
 resetBttn.textContent = resetBttnText;
 
 muteBttn.id = muteId;
-muteBttn.style.width = bttnWidth + "px";
+muteBttn.style.width = bttnWidth + 20 + "px";
 muteBttn.style.height = bttnHeight + "px";
 muteBttn.textContent = muteBttnText;
 
@@ -133,6 +132,17 @@ function drawSpace() {
     canvasCtx.fillRect(0, 0, cnWidth, cnHeight);
 }
 
+function playBgMusic(){
+    console.log("Play Music");
+    bgMusic.currentTime = 0;
+    bgMusic.play();   
+}
+
+function resetBgMusic(){
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+}
+
 function playExplosion() {
     console.log("Explosion!");
     explosionSFX.play();
@@ -147,7 +157,6 @@ function drawAliens() {
     let posY = 0;
     for(i=0;i<aliens.length;i++) {
         [posX, posY] = calcPos(aliens[i]);
-        console.log(aliens[i] + " = " + posX, posY);
         canvasCtx.drawImage(alienImg, posX, posY);
     }
 }
@@ -246,6 +255,7 @@ function loose() {
     canvasCtx.fillStyle = bgColor;
     resetPointsCounter();
     resetLevelCounter();
+    resetBgMusic();
     running = false;
 }
 
@@ -280,6 +290,12 @@ function gameLoop() {
     running = true;
     document.addEventListener('keydown',checkKey);
 
+    
+    var musicLoop = setInterval(function(){
+        console.log("LOOP!");
+        playBgMusic();
+    }, bgMusic.duration*1000);
+    
     var a = 0;
     var loop1 = setInterval(function(){
         moveAliens();
@@ -289,6 +305,7 @@ function gameLoop() {
         if(RaketaKolidujeSVotrelcom()) {
             clearInterval(loop2);
             clearInterval(loop1);
+            clearInterval(musicLoop);
             document.removeEventListener('keydown',checkKey);
             missiles = [];
             drawMissiles();
@@ -304,6 +321,7 @@ function gameLoop() {
         if(aliens.length === 0) {
             clearInterval(loop2);
             clearInterval(loop1);
+            clearInterval(musicLoop);
             document.removeEventListener('keydown',checkKey);
             missiles = [];
             drawMissiles();
@@ -322,7 +340,10 @@ document.getElementById(bttnId).addEventListener('keydown',function(e){
 document.getElementById(bttnId).addEventListener('click',function(){
     /*
     */
-    if(!running) gameLoop();
+    if(!running){
+        gameLoop();
+        playBgMusic();
+    } 
 });
 document.getElementById(resetId).addEventListener("click", function(){
     if (!running) {
@@ -338,11 +359,12 @@ document.getElementById(muteId).addEventListener("click", function() {
         gameMuted = true;
         muteBttn.textContent = unmuteBttnText;
         explosionSFX.muted = gameMuted;
-
+        bgMusic.muted = gameMuted;
     }
     else {
         gameMuted = false;
         muteBttn.textContent = muteBttnText;
         explosionSFX.muted = gameMuted;
+        bgMusic.muted = gameMuted;
     }
 });
