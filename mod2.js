@@ -12,6 +12,7 @@ const cnvId = "playField";
 const bttnId = "start";
 const resetId = "reset";
 const muteId = "mute";
+const debugId = "debug";
 
 // keys
 const moveLeft = "71";
@@ -20,8 +21,10 @@ const shoot = "74";
 
 // reosurces
 const bgColor = "#001337";
-const looseColor = "#FF0000"
-const winColor = "#00FF00"
+const looseColor = "#FF0000";
+const winColor = "#00FF00";
+const debugOffColor = "#FF0000";
+const debugOnColor = "#00FF00";
 const playerImgPath = "resources/player.png";
 const missileImgPath = "resources/missile.png";
 const alienImgPath = playerImgPath;
@@ -31,10 +34,12 @@ const bttnText = "PLAY!";
 const resetBttnText = "RESET";
 const muteBttnText = "MUTE";
 const unmuteBttnText = "UNMUTE";
+const debbugBttnText = "DEBUG";
 
 var tableWrapper = null;
 var defaultAliens = [1,3,5,7,9,23,25,27,29,31];
 var gameMuted = false;
+var isDebbug = false;
 
 var deleteOldUI = function(){
     // remove table
@@ -51,6 +56,7 @@ const canvasCtx = canvasElem.getContext("2d");
 const buttonElem = document.createElement("BUTTON");
 const resetBttn = document.createElement("BUTTON");
 const muteBttn = document.createElement("BUTTON");
+const debugBttn = document.createElement("BUTTON");
 
 // Buttons
 const playerImg = new Image();
@@ -62,25 +68,31 @@ alienImg.src = alienImgPath;
 
 //SFX
 const explosionSFX = new Audio("resources/explosion.mp3");
-const bgMusic = new Audio("resources/bg_music.wav")
+const bgMusic = new Audio("resources/bg_music.wav");
 
 // Buttons
+// Play button
 buttonElem.id = bttnId;
 buttonElem.style.width = bttnWidth + "px";
 buttonElem.style.height = bttnHeight + "px";
 buttonElem.textContent = bttnText;
-
+// reset button
 resetBttn.id = resetId;
 resetBttn.style.width = bttnWidth + "px";
 resetBttn.style.height = bttnHeight + "px";
 resetBttn.style.margin = "30px";
 resetBttn.textContent = resetBttnText;
-
+// mute button
 muteBttn.id = muteId;
 muteBttn.style.width = bttnWidth + 20 + "px";
 muteBttn.style.height = bttnHeight + "px";
 muteBttn.textContent = muteBttnText;
-
+// debug button
+debugBttn.style.width = bttnWidth + "px";
+debugBttn.style.height = bttnHeight + "px";
+debugBttn.style.margin = "100px";
+debugBttn.style.background = debugOffColor;
+debugBttn.textContent = debbugBttnText;
 
 tableWrapper.innerHTML = '<p><b>Score:</b><span id="score">0 </span> <b> Level:</b><span id="level">1</span></p>';
 const scoreInt = document.getElementById("score");
@@ -104,26 +116,27 @@ function initSpace() {
     document.body.appendChild(buttonElem);
     document.body.appendChild(resetBttn);
     document.body.appendChild(muteBttn);
+    document.body.appendChild(debugBttn);
 }
 initSpace();
 
-function calcPos(number){
+function calcPos(number) {
     return [(number%11) * entitySize - entitySize, Math.floor(number / 11) * entitySize];
 }
 
-function addPointsCounter(){
+function addPointsCounter() {
     scoreInt.innerText = parseInt(scoreInt.innerText) + points;
 }
 
-function resetPointsCounter(){
+function resetPointsCounter() {
     scoreInt.innerText = "0";
 }
 
-function addLevelCounter(){
+function addLevelCounter() {
     levelInt.innerText = parseInt(levelInt.innerHTML) + 1;
 }
 
-function resetLevelCounter(){
+function resetLevelCounter() {
     levelInt.innerText = "1";
 }
 
@@ -132,21 +145,26 @@ function drawSpace() {
     canvasCtx.fillRect(0, 0, cnWidth, cnHeight);
 }
 
-function playBgMusic(){
-    console.log("Play Music");
+function playBgMusic() {
     bgMusic.currentTime = 0;
     bgMusic.play();   
 }
 
-function resetBgMusic(){
+function resetBgMusic() {
     bgMusic.pause();
     bgMusic.currentTime = 0;
 }
 
 function playExplosion() {
-    console.log("Explosion!");
+    printDebug("play explosion");
     explosionSFX.play();
     explosionSFX.currentTime = 0;
+}
+
+function printDebug(msg) {
+    if (isDebbug){
+        console.log(msg);
+    }
 }
 
 // nakresli mimozemstanov
@@ -201,11 +219,8 @@ function drawMissiles() {
 // hybe raketami hore a ak je raketa na hrane tabulky znici ju
 function moveMissiles() {
     var i=0;
-    let posX = 0;
-    let posY = 0;
     for(i=0;i<missiles.length;i++) {
         missiles[i]-=11 ;
-        [posX, posY] = calcPos(missiles[i]);
         if(missiles[i] < 0) missiles.splice(i, 1); // canvasCtx.fillRect(posX, posY, entitySize, entitySize);
     }
 }
@@ -268,7 +283,7 @@ function win() {
 var level = 1;
 function nextLevel() {
     level++;
-    console.log('level: '+level);
+    printDebug('level: '+level);
     direction = 1; // pridal som pretoze niekedy zacinaly mimozemstania moc vlavo
     addLevelCounter();
     if(level==1) aliens = [1,3,5,7,9,23,25,27,29,31];
@@ -285,14 +300,14 @@ function nextLevel() {
 
 var running = false;
 function gameLoop() {
-    console.log('gameloop');
+    printDebug('gameloop');
 
     running = true;
     document.addEventListener('keydown',checkKey);
 
     
     var musicLoop = setInterval(function(){
-        console.log("LOOP!");
+        printDebug("replaying music");
         playBgMusic();
     }, bgMusic.duration*1000);
     
@@ -345,6 +360,7 @@ document.getElementById(bttnId).addEventListener('click',function(){
         playBgMusic();
     } 
 });
+// reset button eventListener
 document.getElementById(resetId).addEventListener("click", function(){
     if (!running) {
         canvasCtx.fillStyle = bgColor;
@@ -354,6 +370,7 @@ document.getElementById(resetId).addEventListener("click", function(){
         aliens = defaultAliens;
     }
 });
+// mute button eventListener
 document.getElementById(muteId).addEventListener("click", function() {
     if (!gameMuted) {
         gameMuted = true;
@@ -366,5 +383,17 @@ document.getElementById(muteId).addEventListener("click", function() {
         muteBttn.textContent = muteBttnText;
         explosionSFX.muted = gameMuted;
         bgMusic.muted = gameMuted;
+    }
+});
+debugBttn.addEventListener("click", function() {
+    if (isDebbug){
+        isDebbug = false;
+        debugBttn.style.background = debugOffColor;
+        printDebug("debug-" + isDebbug);
+    }
+    else {
+        isDebbug = true;
+        debugBttn.style.background = debugOnColor;
+        printDebug("debug-" + isDebbug);
     }
 });
