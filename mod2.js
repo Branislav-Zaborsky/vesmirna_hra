@@ -179,23 +179,6 @@ function drawAliens() {
     }
 }
 
-// pohybuje mimozemstanmi
-var direction = 1;
-function moveAliens() {
-    var i=0;
-    for(i=0;i<aliens.length;i++) {
-        aliens[i]=aliens[i]+direction;
-    }
-    direction *= -1;
-}
-
-function lowerAliens() {
-    var i=0;
-    for(i=0;i<aliens.length;i++) {
-        aliens[i]+=11;
-    }
-}
-
 var ship = 115
 function drawShip() {
     let posX = 0;
@@ -213,15 +196,6 @@ function drawMissiles() {
     for(i=0;i<missiles.length;i++) {
         [posX, posY] = calcPos(missiles[i]);
         canvasCtx.drawImage(missileImg, posX, posY);
-    }
-}
-
-// hybe raketami hore a ak je raketa na hrane tabulky znici ju
-function moveMissiles() {
-    var i=0;
-    for(i=0;i<missiles.length;i++) {
-        missiles[i]-=11 ;
-        if(missiles[i] < 0) missiles.splice(i, 1); // canvasCtx.fillRect(posX, posY, entitySize, entitySize);
     }
 }
 
@@ -253,15 +227,6 @@ function checkCollisionsMA() {
             playExplosion();
         }
     }
-}
-
-function RaketaKolidujeSVotrelcom() {
-    for(var i=0;i<aliens.length;i++) {
-        if(aliens[i]>109) {
-            return true;
-        }
-    }
-    return false;
 }
 
 function loose() {
